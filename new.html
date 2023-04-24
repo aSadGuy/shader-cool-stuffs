@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400&display=swap");
+    </style>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>fbm</title>
+  </head>
+
+  <style>
+    html,
+    body {
+      font-family: "Quicksand";
+      background: "black";
+      margin: 0;
+      overflow: hidden;
+    }
+    .scroll-container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .scroll-content {
+      position: absolute;
+      width: 100%;
+      top: 0;
+      transform: translateY(0);
+    }
+    .text {
+      font-size: 50px;
+      font-weight: 400;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: black;
+      z-index: inherit;
+    }
+  </style>
+
+  <div class="scroll-container">
+    <div class="scroll-content">
+      <canvas class="webgl"></canvas>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from "https://cdn.skypack.dev/three";
+
+    // Canvas
+    const canvas = document.querySelector("canvas.webgl");
+
+    // Scene
+    const scene = new THREE.Scene();
+    const geometry = new THREE.PlaneGeometry(2, 2, 15, 15);
+
+    // Shaders
+    const vertexShader =
+      /* glsl */
+      `
+            uniform float uTime;
+
+            varying vec2 vUv;
+            varying vec3 vViewPosition;
+
+
+            void main() {
+                vec4 modelPosition = modelMatrix * vec4(position, 1.0);
+
+                vec4 viewPosition = viewMatrix * modelPosition;
+                vec4 projectedPosition = projectionMatrix * viewPosition;
+
+                gl_Position = projectedPosition;
+
+                // Varyings
+                vUv = uv;
+                vViewPosition = - modelPosition.xyz;
+            }
+        `;
+
+    const fragmentShader =
+      /* glsl */
+      `
+            uniform vec2 uMouse;
+            uniform float uScroll;
+            uniform float uTime;
+            uniform vec2 uMouseSpeed;
+
+            varying vec2 vUv;
+            varying vec3 vViewPosition;
+
+            void main() {
+                vec2 strength = vec2(length(vUv - uMouse));
+
+                vec2 circle = smoothstep(0.1,0.12, strength);
+
+                gl_FragColor = vec4(circle, 0.5, 1.0);
+            }
+        `;
+
+    /**
+     * Mesh
+     */
+    // Material
+    const material = new THREE.ShaderMaterial({
+      vertexShader: vertexShader,
+      fragmentShader: fragmentShader,
+      uniforms: {
+        uTime: { value: 0 },
+        uMouse: { value: new THREE.Vector2() },
+        uHover: { value: 0 },
+        uScroll: { value: 0 },
+        uMouseSpeed: { value: new THREE.Vector2() },
+      },
+    });
+
+    // Mesh
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    const planeWidth = mesh.geometry.parameters.width;
+    const planeHeight = mesh.geometry.parameters.height;
+
+    let left;
+    let top;
+    let right;
+    let bottom;
+
+    const pagesObj = {};
+
+    let mouseCoords;
+
+    let mouse = new THREE.Vector2();
+
+    /**
+     * Mouse
+     */
+    document.onmousemove = (e) => {
+      pagesObj.xPage = e.pageX;
+      pagesObj.yPage = e.pageY;
+    };
+
+    // speed
+    let prevMousePos = new THREE.Vector2();
+    let prevTimestamp = 0;
+    let mouseSpeed = new THREE.Vector2();
+    const maxSpeed = 3000;
+
+    document.addEventListener("mousemove", (e) => {
+      const currentMousePos = new THREE.Vector2(e.pageX, e.pageY);
+      const currentTimestamp = new Date().getTime();
+
+      const deltaTime = (currentTimestamp - prevTimestamp) / 1000; // pixels per second
+      if (deltaTime > 0) {
+        mouseSpeed.x = (currentMousePos.x - prevMousePos.x) / deltaTime;
+        mouseSpeed.y = (currentMousePos.y - prevMousePos.y) / -deltaTime;
+      }
+
+      prevMousePos = currentMousePos;
+      prevTimestamp = currentTimestamp;
+
+      const normalizedMouseSpeed = new THREE.Vector2(
+        Math.min(Math.abs(mouseSpeed.x) / maxSpeed, 1),
+        Math.min(Math.abs(mouseSpeed.y) / maxSpeed, 1)
+      );
+
+      if (normalizedMouseSpeed === 0) {
+      }
+
+      const roundedMouseSpeed = new THREE.Vector2(
+        Math.round(normalizedMouseSpeed.x * 100) / 100,
+        Math.round(normalizedMouseSpeed.y * 100) / 100
+      );
+
+      material.uniforms.uMouseSpeed.value = roundedMouseSpeed;
+    });
+
+    /**
+     * Sizes
+     */
+    const sizes = {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+
+    /**
+     * Scroll
+     */
+    const container = document.querySelector(".scroll-container");
+    const content = document.querySelector(".scroll-content");
+    console.log(content);
+
+    const updateContentPosition = (scrollY) => {
+      content.style.transform = `translateY(${-scrollY}px)`;
+    };
+
+    let scrollY = 0;
+
+    container.addEventListener("wheel", (e) => {
+      scrollY += e.deltaY / sizes.height;
+
+      scrollY = Math.max(0, Math.min(1, scrollY));
+
+      updateContentPosition(scrollY);
+      material.uniforms.uScroll.value = scrollY;
+    });
+
+    window.addEventListener("resize", () => {
+      // Update sizes
+      sizes.width = window.innerWidth;
+      sizes.height = window.innerHeight;
+
+      // Update camera
+      camera.aspect = sizes.width / sizes.height;
+      camera.updateProjectionMatrix();
+
+      // Update renderer
+      renderer.setSize(sizes.width, sizes.height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    /**
+     * Camera
+     */
+    // Base camera
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      sizes.width / sizes.height,
+      0.1,
+      100
+    );
+    camera.position.set(0, 0, 2);
+    scene.add(camera);
+
+    /**
+     * Renderer
+     */
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvas,
+    });
+    renderer.setSize(sizes.width, sizes.height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    /**
+     * Animate
+     */
+    const clock = new THREE.Clock();
+
+    const tick = () => {
+      const elapsedTime = clock.getElapsedTime();
+      material.uniforms.uTime.value = elapsedTime;
+
+      /**
+       * Plane
+       */
+      const topLeft = new THREE.Vector3(
+        mesh.position.x - planeWidth / 2,
+        mesh.position.y - planeHeight / 2,
+        0
+      );
+
+      const bottomRight = new THREE.Vector3(
+        mesh.position.x + planeWidth / 2,
+        mesh.position.y + planeHeight / 2,
+        0
+      );
+
+      topLeft.project(camera);
+      bottomRight.project(camera);
+
+      left = ((1 + topLeft.x) / 2) * window.innerWidth;
+      top = ((1 + topLeft.y) / 2) * window.innerHeight;
+      right = ((1 + bottomRight.x) / 2) * window.innerWidth;
+      bottom = ((1 + bottomRight.y) / 2) * window.innerHeight;
+
+      /**
+       * Mouse
+       */
+      mouseCoords = new THREE.Vector2(pagesObj.xPage, pagesObj.yPage);
+
+      const boxWidth = right - left;
+      const boxHeight = bottom - top;
+
+      mouse.x = mouseCoords.x / boxWidth - left / boxWidth;
+      mouse.y = mouseCoords.y / boxHeight - top / boxHeight;
+
+      material.uniforms.uMouse.value.x = mouse.x;
+      material.uniforms.uMouse.value.y = 1 - mouse.y;
+
+      /**
+       * Hover
+       */
+      const hoverCheck =
+        left < mouseCoords.x &&
+        right > mouseCoords.x &&
+        top < mouseCoords.y &&
+        bottom > mouseCoords.y;
+
+      material.uniforms.uHover.value = hoverCheck;
+
+      // Update controls
+      // controls.update();
+
+      // Render
+      renderer.render(scene, camera);
+
+      // Call tick again on the next frame
+      window.requestAnimationFrame(tick);
+    };
+
+    tick();
+  </script>
+
+  <body></body>
+</html>
