@@ -164,11 +164,7 @@
     console.log(content);
 
     const updateContentPosition = (scrollY) => {
-      const maxScroll = content.offsetHeight - container.offsetHeight;
-
-      const contentY = -scrollY * maxScroll;
-
-      content.style.transform = `translateY(${contentY}px)`;
+      content.style.transform = `translateY(${-scrollY}px)`;
     };
 
     let scrollY = 0;
@@ -208,10 +204,6 @@
     );
     camera.position.set(0, 0, 2);
     scene.add(camera);
-
-    // Controls
-    // const controls = new OrbitControls(camera, canvas);
-    // controls.enableDamping = true;
 
     /**
      * Renderer
