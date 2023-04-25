@@ -95,8 +95,9 @@
 
             void main() {
                 vec2 strength = vec2(length(vUv - uMouse));
+                // vec2 strength = vec2(length(vUv - 0.5));
 
-                vec2 circle = smoothstep(0.1,0.12, strength);
+                vec2 circle = smoothstep(0.1, 0.12, strength);
 
                 gl_FragColor = vec4(circle, 0.5, 1.0);
             }
