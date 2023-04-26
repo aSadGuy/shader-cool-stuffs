@@ -92,6 +92,7 @@
 
             varying vec2 vUv;
             varying vec3 vViewPosition;
+            varying float vCircle;
 
             void main() {
                 float positionX = ((cos(uTime) + 1.0) * 0.5) * 0.6 + 0.2;
@@ -100,8 +101,7 @@
 
                 float circle = smoothstep(0.1, 0.12, size);
 
-                
-
+                float vCircle = circle;
 
                 gl_FragColor = vec4(circle, 0.3, 0.5, 1.0);
             }
