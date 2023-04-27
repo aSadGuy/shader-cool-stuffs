@@ -99,7 +99,13 @@
                 float positionY = ((sin(uTime) + 1.0) * 0.5) * 0.6 + 0.2;
                 float size = distance(vUv, vec2(positionX, positionY));
 
+                float dragPositionX = ((cos(uTime) + 1.0) * 0.5) * 0.6 + 0.2;
+                float dragPositionY = ((sin(uTime) + 1.0) * 0.5) * 0.6 + 0.2;
+                float dragSize = distance(vUv, vec2(dragPositionX, dragPositionY));
+
                 float circle = smoothstep(0.1, 0.12, size);
+                float drag = smoothstep(0.1, 0.12, dragSize);
+
 
                 float vCircle = circle;
 
