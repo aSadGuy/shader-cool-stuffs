@@ -192,13 +192,13 @@
             
             float pattern( in vec2 p, out vec2 q, out vec2 r )
             {
-                float circle = distance(vUv, uMouse) * .5;
+                float circle = distance(vUv, uMouse) * .25;
                 
                 q.x = fbm( p + vec2(circle) ) + (uTime * 0.01);
                 q.y = fbm( p + vec2(2.2,1.3) ) + (uTime * 0.01);
 
                 r.x = fbm( p + 4.0*q + vec2(9.7,2.2) );
-                r.y = fbm( p + 4.0*q + vec2(1.3,2.8) );
+                r.y = fbm( p + 4.0*q + vec2(circle) );
 
                 return fbm( p + 4.0*r );
             }
@@ -221,8 +221,8 @@
                 // vec3(0.0,0.3,0.2),
                 // clamp((f*f)*4.0,0.2,.7));
 
-                color = mix(vec3(0.,0.999,2.),
-                vec3(0.0,0.3,0.2),
+                color = mix(vec3(0.,0.2,2.),
+                vec3(2.6,0.3,0.2),
                 clamp((f*f)*4.0,0.2,.7));
 
                 color = mix(color,
@@ -238,12 +238,22 @@
                 clamp(length(q.x), 0.0, 1.0));
 
                 color = mix(color,
-                vec3(0.666667,4.,1.),
+                vec3(0.666667,.3,0.5),
                 clamp(length(q.y),0.2,0.6));
+
+                color = mix(color,
+                vec3(0.666667,0.5,1.),
+                clamp(length(q.y*f*r.x),0.2,0.6));
+
+                color = mix( color, vec3(0.9,0.9,0.9), dot(q,q) );
+                color = mix( color, vec3(0.0,0.2,0.4), 0.5*smoothstep(1.2,1.3,abs(r.y)+abs(r.x)) );
+
+                color *= vec3(1.2,1.25,1.2);
+
 
 
                 // gl_FragColor = vec4(strength, strength, strength, 1.0);
-                gl_FragColor = vec4((f*f+1.5*f)*color + .2 ,1.);
+                gl_FragColor = vec4((f*f*10.0+f+1.5*f + clamp(circle,0.15,0.2))*color + .2 ,1.);
             }
         `;
 
