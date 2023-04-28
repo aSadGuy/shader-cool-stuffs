@@ -216,25 +216,29 @@
 
                 float f = fbm(strength + r);
                 
-                color = mix(vec3(1.0),
-                vec3(0.7,0.3,0.2),
+                color = mix(vec3(0.,0.999,2.),
+                vec3(0.0,0.3,0.2),
                 clamp((f*f)*4.0,0.2,.7));
 
-                // color = mix(color,
-                // vec3(0,0,0.164706),
-                // clamp(length(r.x),0.2,.5));
+                color = mix(color,
+                vec3(0,0,3.4706),
+                clamp(length(r.x),0.2,.5));
 
-                // color = mix(color,
-                // vec3(0.666667,1,1),
-                // clamp(length(q.y),0.2,0.6));
+                color = mix(color,
+                vec3(0.6,0.6,2.0),
+                clamp(length(r.y),0.2,1.));
 
-                // color = mix(color, 
-                // vec3(0.0,0.6,0.4),
-                // clamp(length(q.x), 0.0, 1.0));
+                color = mix(color, 
+                vec3(2.0,0.6,0.4),
+                clamp(length(q.x), 0.0, 1.0));
+
+                color = mix(color,
+                vec3(0.666667,4.,1.),
+                clamp(length(q.y),0.2,0.6));
 
 
                 // gl_FragColor = vec4(strength, strength, strength, 1.0);
-                gl_FragColor = vec4((f*f*f+1.6*f*f+1.5*f)*color ,1.);
+                gl_FragColor = vec4((f*f+1.5*f)*color + .2 ,1.);
             }
         `;
 
