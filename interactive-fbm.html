@@ -216,6 +216,11 @@
 
                 float f = fbm(strength + r);
                 
+                // WHITE: 
+                // color = mix(vec3(1.0),
+                // vec3(0.0,0.3,0.2),
+                // clamp((f*f)*4.0,0.2,.7));
+
                 color = mix(vec3(0.,0.999,2.),
                 vec3(0.0,0.3,0.2),
                 clamp((f*f)*4.0,0.2,.7));
