@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>fbm</title>
+  </head>
+
+  <style>
+    html,
+    body {
+      background: "black";
+      margin: 0;
+      overflow: hidden;
+    }
+  </style>
+
+  <canvas class="webgl"></canvas>
+
+  <script type="module">
+    import * as THREE from "https://cdn.skypack.dev/three@0.138.2";
+
+    // Canvas
+    const canvas = document.querySelector("canvas.webgl");
+
+    // Scene
+    const scene = new THREE.Scene();
+
+    // Shaders
+    const vertexShader =
+      /* glsl */
+      `
+      uniform float uTime;
+    
+      varying vec2 vUv;
+      varying vec3 vViewPosition;
+
+
+      void main() {
+          vec4 modelPosition = modelMatrix * vec4(position, 1.0);
+
+          float frequency = 3.0;
+          float amplitude = 0.18;
+          float time = uTime * 4.0;
+
+          float elevation = sin(modelPosition.x * frequency + -time) * amplitude;
+
+          modelPosition.y += elevation ;
+
+          vec4 viewPosition = viewMatrix * modelPosition;
+          vec4 projectedPosition = projectionMatrix * viewPosition;
+
+          gl_Position = projectedPosition;
+
+          // Varyings
+          vUv = uv;
+          vViewPosition = - modelPosition.xyz;
+      }
+    `;
+
+    const fragmentShader =
+      /* glsl */
+      `
+        void main() {
+          vec3 color = vec3(0.384,0.259,0.541);
+
+          gl_FragColor = vec4(color, 1.0);
+        }    
+    `;
+
+    // Geometry
+    const ball = new THREE.Group();
+
+    // const geometry = new THREE.BoxGeometry(1, 0.04, 1, 30, 30, 30);
+    const geometry = new THREE.CylinderGeometry(1, 1, 0.04, 100, 100);
+
+    // Material
+    // const material = new THREE.ShaderMaterial({
+    //   vertexShader: vertexShader,
+    //   fragmentShader: fragmentShader,
+    //   uniforms: {
+    //     uTime: { value: 0 },
+    //   },
+    // });
+    const material = new THREE.MeshBasicMaterial({ color: "#6e4bc9" });
+
+    // Mesh
+
+    for (let i = 0; i < 15; i++) {
+      const angle = Math.PI * 0.3;
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.rotation.x = angle * i;
+
+      mesh.castShadow = true;
+
+      ball.add(mesh);
+    }
+
+    scene.add(ball);
+
+    /**
+     * Lights
+     */
+    const ambientLight = new THREE.AmbientLight(0xff00000, 1.0);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0x00fffc, 0.3);
+    scene.add(directionalLight);
+
+    /**
+     * Sizes
+     */
+    const sizes = {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+
+    window.addEventListener("resize", () => {
+      // Update sizes
+      sizes.width = window.innerWidth;
+      sizes.height = window.innerHeight;
+
+      // Update camera
+      camera.aspect = sizes.width / sizes.height;
+      camera.updateProjectionMatrix();
+
+      // Update renderer
+      renderer.setSize(sizes.width, sizes.height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    /**
+     * Camera
+     */
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      sizes.width / sizes.height,
+      0.1,
+      100
+    );
+    camera.position.set(0, 0, 2);
+    scene.add(camera);
+
+    // /**
+    //  * Renderer
+    //  */
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvas,
+    });
+    renderer.setSize(sizes.width, sizes.height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    /**
+     * Animate
+     */
+    const clock = new THREE.Clock();
+
+    let time = Date.now();
+
+    const tick = () => {
+      const elapsedTime = clock.getElapsedTime();
+      const currentTime = Date.now();
+      const delta = currentTime - time;
+
+      time = currentTime;
+
+      // material.uniforms.uTime.value = elapsedTime;
+
+      // Render
+      renderer.render(scene, camera);
+
+      // Call tick again on the next frame
+      window.requestAnimationFrame(tick);
+    };
+
+    tick();
+  </script>
+
+  <body></body>
+</html>
