@@ -32,7 +32,7 @@
       /* glsl */
       `
       uniform float uTime;
-    
+
       varying vec2 vUv;
       varying vec3 vViewPosition;
 
@@ -46,7 +46,7 @@
 
           float elevation = sin(modelPosition.x * frequency + -time) * amplitude;
 
-          modelPosition.y += elevation ;
+          modelPosition.y += elevation;
 
           vec4 viewPosition = viewMatrix * modelPosition;
           vec4 projectedPosition = projectionMatrix * viewPosition;
@@ -63,10 +63,10 @@
       /* glsl */
       `
         void main() {
-          vec3 color = vec3(0.384,0.259,0.541);
+          vec3 color = vec3(0.384,0.259,0.641);
 
           gl_FragColor = vec4(color, 1.0);
-        }    
+        }
     `;
 
     // Geometry
@@ -76,19 +76,23 @@
     const geometry = new THREE.CylinderGeometry(1, 1, 0.04, 100, 100);
 
     // Material
-    // const material = new THREE.ShaderMaterial({
-    //   vertexShader: vertexShader,
-    //   fragmentShader: fragmentShader,
-    //   uniforms: {
-    //     uTime: { value: 0 },
-    //   },
-    // });
-    const material = new THREE.MeshBasicMaterial({ color: "#6e4bc9" });
+    const material = new THREE.ShaderMaterial({
+      vertexShader: vertexShader,
+      fragmentShader: fragmentShader,
+      uniforms: {
+        uTime: { value: 0 },
+        color: { value: new THREE.Color(0xffffff) },
+        lightDirection: { value: new THREE.Vector3(1.0, 1.0, 1.0).normalize() },
+      },
+    });
+    const standardMaterial = new THREE.MeshStandardMaterial({
+      color: "#6e4bc9",
+    });
 
     // Mesh
 
-    for (let i = 0; i < 15; i++) {
-      const angle = Math.PI * 0.3;
+    for (let i = 0; i < 13; i++) {
+      const angle = Math.PI * 0.075;
 
       const mesh = new THREE.Mesh(geometry, material);
       mesh.rotation.x = angle * i;
@@ -98,16 +102,20 @@
       ball.add(mesh);
     }
 
+    const rotatedMesh = new THREE.Mesh(geometry, standardMaterial);
+    rotatedMesh.rotation.x = Math.PI * 0.5;
+    rotatedMesh.position.set(0, 0, 0.3);
+
+    ball.rotation.y = -Math.PI * 0.0;
+    ball.rotation.y = -Math.PI * 0.5;
+
     scene.add(ball);
 
     /**
      * Lights
      */
-    const ambientLight = new THREE.AmbientLight(0xff00000, 1.0);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
     scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0x00fffc, 0.3);
-    scene.add(directionalLight);
 
     /**
      * Sizes
@@ -135,7 +143,7 @@
      * Camera
      */
     const camera = new THREE.PerspectiveCamera(
-      75,
+      110,
       sizes.width / sizes.height,
       0.1,
       100
@@ -166,7 +174,7 @@
 
       time = currentTime;
 
-      // material.uniforms.uTime.value = elapsedTime;
+      material.uniforms.uTime.value = elapsedTime;
 
       // Render
       renderer.render(scene, camera);
