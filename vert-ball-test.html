@@ -5,14 +5,6 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>fbm</title>
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "https://cdn.skypack.dev/three/",
-          "OrbitControls": "https://cdn.skypack.dev/three/examples/jsm/controls/OrbitControls"
-        }
-      }
-    </script>
   </head>
 
   <style>
@@ -27,8 +19,8 @@
   <canvas class="webgl"></canvas>
 
   <script type="module">
-    import * as THREE from "three";
-    import { OrbitControls } from "OrbitControls";
+    import * as THREE from "https://cdn.skypack.dev/three@0.138.2";
+    import OrbitControls from "https://cdn.skypack.dev/threejs-orbit-controls";
 
     // Canvas
     const canvas = document.querySelector("canvas.webgl");
@@ -355,7 +347,7 @@
         `;
 
     // Geometry
-    const geometry = new THREE.SphereGeometry(1, 50, 50);
+    const geometry = new THREE.SphereGeometry(1, 100, 100);
 
     // Material
     const material = new THREE.ShaderMaterial({
